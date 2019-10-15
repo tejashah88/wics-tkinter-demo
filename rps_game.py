@@ -1,13 +1,15 @@
 import random
 import tkinter as tk
 
+# Setup the window
 window = tk.Tk()
 window.title('Rock Paper Scissors')
 window.geometry('300x200')
 
+# Used to store who wins/loses
 results_text = tk.StringVar(window)
 
-
+# End game scenarios
 def tie_game():
     results_text.set('Tie :/')
 
@@ -20,7 +22,7 @@ def computer_wins():
 def unknown_action():
     results_text.set('YOU BROKE THE GAME')
 
-
+# See who wins
 def play_game(user, computer):
     if user == computer:
         tie_game()
@@ -46,10 +48,11 @@ def play_game(user, computer):
         else:
             unknown_action()
 
+# Let the computer make a (random) choice
 def computer_choice():
     return random.choice(['rock', 'paper', 'scissors'])
 
-
+# Functions for player choices
 def i_choose_rock():
     play_game('rock', computer_choice())
 
@@ -76,4 +79,5 @@ btnScissors.pack(side='top', fill='both', expand='yes', padx='5', pady='5')
 resultLabel = tk.Label(root, textvariable=results_text)
 resultLabel.pack(side='top', fill='both', expand='yes', padx='5', pady='5')
 
+# Show the GUI
 window.mainloop()

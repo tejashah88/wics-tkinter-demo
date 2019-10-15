@@ -1,52 +1,63 @@
+import time
+import threading
 import tkinter as tk
 from PIL import Image
 from PIL import ImageTk
-import threading
 import cv2
-import time
 
+# Prepare the window
 window = tk.Tk()
 window.title('Camera Demo')
 window.geometry('640x480')
 
+# Creates a thread for openCV processing
+def start_as_background_task(loop_function):
+    run_event = threading.Event()
+    run_event.set()
+    action = threading.Thread(target=loop_function, args=(run_event,))
+    action.setDaemon(True)
+    action.start()
 
+    return run_event
+
+# This is the infinite loop where we display the camera feed
 def cvloop(run_event):
     global main_panel
-    video_capture = cv2.VideoCapture(0)
+    camera = cv2.VideoCapture(0)
 
-    while run_event.is_set():  # while the thread is active we loop
-        ret, image = video_capture.read()
+    # Run while the app hasn't been terminated
+    while run_event.is_set():
+        # Read an image from the camera feed
+        _, image = camera.read()
+
+        # Convert it from BGR to RGB
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+        # Prepare it for displaying on tkinter
         image = Image.fromarray(image)
         image = ImageTk.PhotoImage(image)
-        main_panel.configure(image=image)
-        main_panel.image = image
+        display.configure(image=image)
+        display.image = image
 
-    video_capture.release()
+    camera.release()
 
+# Main widget for holding the camera feed
+display = tk.Label(window)
+display.pack(padx=10, pady=10)
 
-main_panel = tk.Label(window)
-main_panel.pack(padx=10, pady=10)
+# This is needed for the GUI to display the camera feed properly
+run_event = start_as_background_task(cvloop)
 
-# Creates a thread for openCV processing
-run_event = threading.Event()
-run_event.set()
-action = threading.Thread(target=cvloop, args=(run_event,))
-action.setDaemon(True)
-action.start()
-
-
-# Function to clean everything up
+# Clean everything up when the user wants to quit
 def terminate():
-    global window, run_event, action
-    print("Cleaning up OpenCV resources...")
+    global window, run_event
     run_event.clear()
-    time.sleep(1)
-    # action.join() #strangely in Linux this thread does not terminate properly, so .join never finishes
+    time.sleep(.5)
     window.destroy()
-    print("All closed!")
+    print("Bye!")
 
-
-# When the GUI is closed it actives the terminate function
+# When the GUI is closed it calls the terminate() function
 window.protocol("WM_DELETE_WINDOW", terminate)
-window.mainloop()  # creates loop of GUI
+
+# Show the GUI
+window.mainloop()
